@@ -48,3 +48,19 @@ try { & $installer -GameDir (Join-Path $env:APPDATA '.minecraft') } catch {
 }
 if (-not $rejected) { throw 'Original game directory was accepted' }
 Write-Host 'PASS: Windows install, repeated update, checksum, unrelated files, original game isolation.'
+
+# The user's existing profile lives under .minecraft/versions/test.
+$testProfile = Join-Path $env:APPDATA '.minecraft\versions\test'
+$otherProfile = Join-Path $env:APPDATA '.minecraft\versions\claude\mods'
+New-Item -ItemType Directory -Force $testProfile, $otherProfile | Out-Null
+Set-Content (Join-Path $testProfile 'test.json') '{"libraries":[{"name":"net.neoforged:neoforge:21.1.265"}]}'
+Set-Content (Join-Path $otherProfile 'claude-profile.jar') 'other profile'
+# Deliberately do not create test/mods: no fallback into the shared mods is allowed.
+& $installer -TestProfile
+& $installer -TestProfile
+$testMods = Join-Path $testProfile 'mods'
+if (-not (Test-Path (Join-Path $testMods 'mages-legacy-0.2.0-fixture.jar'))) { throw 'Test profile was not updated' }
+if ((Get-ChildItem -LiteralPath $original).Count -ne 1) { throw 'Shared mods directory was modified' }
+if ((Get-Content (Join-Path $original 'claude-sentinel.jar') -Raw).Trim() -ne 'original installation') { throw 'Shared mod was changed' }
+if ((Get-Content (Join-Path $otherProfile 'claude-profile.jar') -Raw).Trim() -ne 'other profile') { throw 'Other profile was changed' }
+Write-Host 'PASS: test profile install/update creates only test/mods, preserving shared mods and other profiles.'

@@ -26,3 +26,13 @@
 
 Релизы NeoForge используют тег `neoforge-dev`, установщик — `pack-neoforge`.
 Прежние dev-релизы Fabric и старый manifest сохранены отдельно.
+
+## Уже существующий профиль test
+
+Если NeoForge 1.21.1 установлен в `%APPDATA%\.minecraft\versions\test`,
+запустите `install-test.bat`. Он ставит и обновляет моды строго в `test\mods`,
+создаёт эту папку при необходимости и проверяет `test\test.json`.
+Общая `.minecraft\mods` и другие профили не изменяются.
+В TLauncher включите отдельную папку игры для профиля `test`: фактическая
+папка игры должна быть `%APPDATA%\.minecraft\versions\test`.
+Само расположение JSON версии ещё не задаёт папку игры лаунчера.

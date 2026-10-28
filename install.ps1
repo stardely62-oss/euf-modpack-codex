@@ -1,19 +1,30 @@
 ﻿# Ставит или обновляет всю сборку euf (NeoForge 1.21.1) в папку mods TLauncher:
 # Все моды из modpack.json для NeoForge 1.21.1. Лишние старые версии этих модов убирает.
 # Запуск: двойной клик по install-modpack.bat (лежит рядом).
+#   -TestProfile      только %APPDATA%\.minecraft\versions\test\mods
 #   -Stable           брать стабильные релизы наших модов (v*), а не свежие dev-сборки
-#   -VersionName "…"  имя версии в TLauncher (по умолчанию "Fabric 1.20.1")
+#   -VersionName "…"  имя версии в TLauncher (по умолчанию "NeoForge 1.21.1")
 #   -GameDir "…"      папка игры (по умолчанию %APPDATA%\.minecraft-codex-neoforge-1.21.1)
 param(
     [switch]$Stable,
+    [switch]$TestProfile,
     [string]$VersionName = 'NeoForge 1.21.1',
     [string]$GameDir = (Join-Path $env:APPDATA '.minecraft-codex-neoforge-1.21.1')
 )
 
 $ErrorActionPreference = 'Stop'
 
-# This installer exclusively owns a separate game directory.
+# Explicitly select the user's dedicated TLauncher test profile, never the shared mods directory.
+if ($TestProfile) {
+    if ($PSBoundParameters.ContainsKey('GameDir') -or $PSBoundParameters.ContainsKey('VersionName')) {
+        throw 'Use -TestProfile by itself; its target is fixed to .minecraft/versions/test/mods.'
+    }
+    $GameDir = Join-Path $env:APPDATA '.minecraft'
+    $VersionName = 'test'
+}
+# Allowed roots are fixed; selecting the shared root requires the explicit test-profile mode.
 $isolatedRoot = [IO.Path]::GetFullPath((Join-Path $env:APPDATA '.minecraft-codex-neoforge-1.21.1')).TrimEnd('\', '/')
+if ($TestProfile) { $isolatedRoot = [IO.Path]::GetFullPath((Join-Path $env:APPDATA '.minecraft')).TrimEnd('\', '/') }
 if ([IO.Path]::GetFullPath($GameDir).TrimEnd('\', '/') -ine $isolatedRoot) {
     throw 'Use only %APPDATA%\.minecraft-codex-neoforge-1.21.1. The original Minecraft directory is protected.'
 }
@@ -64,9 +75,8 @@ try {
         throw "Не нашёл версию '$VersionName' в $GameDir\versions. Установи её в TLauncher и запусти один раз."
     }
     $mods = Join-Path $versionDir 'mods'
-    if (-not (Test-Path $mods)) { $mods = Join-Path $GameDir 'mods' }
+    if (-not $TestProfile -and -not (Test-Path $mods)) { $mods = Join-Path $GameDir 'mods' }
     Assert-IsolatedPath $mods
-    New-Item -ItemType Directory -Force -Path $mods | Out-Null
     Say "Папка модов: $mods"
 
     if (Get-Process -Name javaw, java -ErrorAction SilentlyContinue) {
@@ -80,7 +90,9 @@ try {
     $loaderMatch = [regex]::Match($profileText, 'net\.neoforged:neoforge:(21\.1\.[0-9]+)')
     if (-not $loaderMatch.Success) { throw 'Choose a NeoForge 1.21.1 profile in the separate game directory.' }
     if ([version]$loaderMatch.Groups[1].Value -lt [version]'21.1.265') { throw 'NeoForge 21.1.265 or newer for Minecraft 1.21.1 is required.' }
-    if (Get-ChildItem -LiteralPath $mods -Filter 'fabric-api-*.jar') { throw 'This folder contains Fabric mods. Use a clean NeoForge profile.' }
+    if ((Test-Path -LiteralPath $mods) -and (Get-ChildItem -LiteralPath $mods -Filter 'fabric-api-*.jar')) { throw 'This folder contains Fabric mods. Use a clean NeoForge profile.' }
+
+    New-Item -ItemType Directory -Force -Path $mods | Out-Null
 
     # 3. Моды сборки
     $manifest = Get-Manifest

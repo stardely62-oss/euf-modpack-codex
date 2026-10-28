@@ -66,7 +66,7 @@ jobs:
           }
           if (-not $rejected) { throw 'Linked mods directory was accepted' }
       - name: Build the installer zip
-        run: zip -j euf-modpack-neoforge-1.21.1.zip install-modpack.bat install.ps1 modpack-neoforge-1.21.1.json README.md CODEX.md
+        run: zip -j euf-modpack-neoforge-1.21.1.zip install-modpack.bat install-test.bat install.ps1 modpack-neoforge-1.21.1.json README.md CODEX.md
       - uses: actions/upload-artifact@v4
         with:
           name: neoforge-installer
