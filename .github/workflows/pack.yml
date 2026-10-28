@@ -9,7 +9,15 @@ permissions:
   contents: write
 
 jobs:
+  windows-installer:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install and update in an isolated Windows fixture
+        shell: powershell
+        run: ./tests/install-windows.ps1
   pack:
+    needs: windows-installer
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

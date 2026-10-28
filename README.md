@@ -1,8 +1,8 @@
-> **Отдельная версия Codex.** Установка в отдельную папку игры: [CODEX.md](CODEX.md).
+> **NeoForge 1.21.1, Java 21 — отдельная версия Codex.** Установка в отдельную папку игры: [CODEX.md](CODEX.md).
 
 # Сборка euf
 
-Сборка модов для **Minecraft 1.20.1 (Fabric)**: наши моды и всё, что с ними играется вместе. Ставится и обновляется одним файлом в TLauncher, лицензия Minecraft не нужна.
+Сборка модов для **Minecraft 1.21.1 (Fabric)**: наши моды и всё, что с ними играется вместе. Ставится и обновляется одним файлом в TLauncher, лицензия Minecraft не нужна.
 
 ## Что внутри
 
@@ -10,16 +10,15 @@
 |---|---|---|
 | [Ender Obelisks](https://github.com/stardely62-oss/modhyed-codex) | обелиски для телепортации между точками мира, ярусы дальности, руины | наш, GitHub Releases |
 | [Mage's Legacy](https://github.com/stardely62-oss/mages-legacy-codex) | расы с деревом талантов: Мицелиды, Пастыри, Застывшие, Кровники, Пустотники, Наёмники, Искусители, Личины | наш, GitHub Releases |
-| [JourneyMap](https://modrinth.com/mod/journeymap) | миникарта и полноэкранная карта, обелиски видны на ней | Modrinth, версия 6.0.7 |
-| [Fabric API](https://modrinth.com/mod/fabric-api) | библиотека, нужна всем модам | Modrinth, под твой Fabric Loader |
+| [JourneyMap](https://modrinth.com/mod/journeymap) | миникарта и полноэкранная карта, обелиски видны на ней | Modrinth, версия 6.0.9 |
 
-Точный список с версиями лежит в [`modpack.json`](modpack.json). Установщик берёт его отсюда при каждом запуске, так что новые моды сборки приходят сами.
+Точный список с версиями лежит в [`modpack-neoforge-1.21.1.json`](modpack-neoforge-1.21.1.json). Установщик берёт его отсюда при каждом запуске, так что новые моды сборки приходят сами.
 
 ## Установка (TLauncher)
 
-1. В TLauncher выбери **Fabric 1.20.1** и запусти один раз до главного меню.
-2. Скачай [`euf-modpack.zip`](https://github.com/stardely62-oss/euf-modpack-codex/releases/latest/download/euf-modpack.zip), распакуй куда угодно и запусти `install-modpack.bat`.
-3. Запускай в TLauncher версию **Fabric 1.20.1**.
+1. В TLauncher выбери **NeoForge 1.21.1** и запусти один раз до главного меню.
+2. Скачай [`euf-modpack-neoforge-1.21.1.zip`](https://github.com/stardely62-oss/euf-modpack-codex/releases/latest/download/euf-modpack-neoforge-1.21.1.zip), распакуй куда угодно и запусти `install-modpack.bat`.
+3. Запускай в TLauncher версию **NeoForge 1.21.1**.
 
 Для обновления запусти `install-modpack.bat` ещё раз: он докачает новые версии и уберёт старые.
 
@@ -49,7 +48,7 @@
 
 ## Для разработки
 
-Чужие моды не хранятся в репозитории: установщик качает их с Modrinth и сверяет контрольную сумму. Чтобы добавить мод, допиши его в `modpack.json`:
+Чужие моды не хранятся в репозитории: установщик качает их с Modrinth и сверяет контрольную сумму. Чтобы добавить мод, допиши его в `modpack-neoforge-1.21.1.json`:
 - для нашего мода — `github` и маску `asset`;
 - для чужого — `url`, `file` и `sha512` с Modrinth.
 
