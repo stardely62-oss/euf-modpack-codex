@@ -58,6 +58,17 @@ function Get-LaunchArguments($node) {
         return
     }
     if ($node -is [pscustomobject]) {
+        # Typed/conditional arguments carry metadata beside value; metadata is not a token.
+        $valueProperty = $node.PSObject.Properties['value']
+        if (-not $valueProperty) { $valueProperty = $node.PSObject.Properties['values'] }
+        if ($valueProperty) {
+            foreach ($key in @('name', 'key')) {
+                $label = $node.PSObject.Properties[$key]
+                if ($label -and $label.Value -is [string] -and $label.Value.StartsWith('--')) { $label.Value }
+            }
+            Get-LaunchArguments $valueProperty.Value
+            return
+        }
         foreach ($property in $node.PSObject.Properties) {
             if ($property.Name -eq 'rules') { continue }
             if ($property.Name.StartsWith('--')) { $property.Name }

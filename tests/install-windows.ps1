@@ -111,3 +111,9 @@ $encoded = @{ id = 'test'; arguments = ($nested | ConvertFrom-Json).arguments | 
 Set-Content (Join-Path $testProfile 'test.json') $encoded
 Run-Installer -TestProfile
 Write-Host 'PASS: NeoForge 21.1.264 nested, mapped and JSON-encoded launcher arguments.'
+
+Set-Content (Join-Path $testProfile 'test.json') '{"id":"test","arguments":{"game":[{"value":"--fml.neoForgeVersion","type":"literal"},{"value":"21.1.264","type":"literal"}]}}'
+Run-Installer -TestProfile
+Set-Content (Join-Path $testProfile 'test.json') '{"id":"test","arguments":{"game":[{"value":"21.1.264","name":"--fml.neoForgeVersion"}]}}'
+Run-Installer -TestProfile
+Write-Host 'PASS: typed argument metadata and reversed key/value order do not affect loader detection.'
