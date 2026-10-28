@@ -41,6 +41,31 @@ function Assert-IsolatedPath([string]$path) {
 }
 Assert-IsolatedPath $GameDir
 
+# Normalize launcher arrays, conditional value objects and TLauncher argument maps.
+function Get-LaunchArguments($node) {
+    if ($null -eq $node) { return }
+    if ($node -is [string]) {
+        $text = $node.Trim()
+        if ($text.StartsWith('{') -or $text.StartsWith('[')) {
+            try { $decoded = $text | ConvertFrom-Json } catch { $decoded = $null }
+            if ($null -ne $decoded) { Get-LaunchArguments $decoded; return }
+        }
+        $node
+        return
+    }
+    if ($node -is [array]) {
+        foreach ($entry in $node) { Get-LaunchArguments $entry }
+        return
+    }
+    if ($node -is [pscustomobject]) {
+        foreach ($property in $node.PSObject.Properties) {
+            if ($property.Name -eq 'rules') { continue }
+            if ($property.Name.StartsWith('--')) { $property.Name }
+            Get-LaunchArguments $property.Value
+        }
+    }
+}
+
 $ProgressPreference = 'SilentlyContinue'
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
@@ -97,14 +122,14 @@ try {
         $profileData = $profileText | ConvertFrom-Json
         # Official NeoForge profiles carry the loader version as a launch argument,
         # not necessarily as a net.neoforged:neoforge library.
-        $gameArguments = @($profileData.arguments.game)
+        $gameArguments = @(Get-LaunchArguments $profileData.arguments)
         for ($i = 0; $i -lt $gameArguments.Count; $i++) {
             $argument = $gameArguments[$i]
             if ($argument -isnot [string]) { continue }
             if ($argument -eq '--fml.neoForgeVersion' -and $i + 1 -lt $gameArguments.Count) {
                 $value = [string]$gameArguments[$i + 1]
                 if ($value -match '^([0-9]+\.[0-9]+\.[0-9]+)(?:-.*)?$') { $loader = [version]$Matches[1] }
-            } elseif ($argument -match '^--fml\.neoForgeVersion[=\s]+([0-9]+\.[0-9]+\.[0-9]+)(?:-.*)?$') {
+            } elseif ($argument -match '(?:^|\s)--fml\.neoForgeVersion[=\s]+([0-9]+\.[0-9]+\.[0-9]+)(?:-[\w.]+)?(?:\s|$)') {
                 $loader = [version]$Matches[1]
             }
         }
@@ -125,7 +150,7 @@ try {
         if (-not (Test-Path -LiteralPath $profile)) { throw "Missing inherited profile: $parent" }
     }
     if (-not $loader -or $loader.Major -ne 21 -or $loader.Minor -ne 1) { throw 'NeoForge for Minecraft 1.21.1 was not found in the selected profile or its parent profiles.' }
-    if ($loader -lt [version]'21.1.265') { throw "Detected NeoForge $loader. These mods require NeoForge 21.1.265 or newer for Minecraft 1.21.1. Update the loader for profile '$VersionName'." }
+    if ($loader -lt [version]'21.1.264') { throw "Detected NeoForge $loader. These mods require NeoForge 21.1.264 or newer for Minecraft 1.21.1. Update the loader for profile '$VersionName'." }
     Say "NeoForge $loader"
     if ((Test-Path -LiteralPath $mods) -and (Get-ChildItem -LiteralPath $mods -Filter 'fabric-api-*.jar')) { throw 'This folder contains Fabric mods. Use a clean NeoForge profile.' }
 

@@ -2,7 +2,7 @@ name: pack
 
 on:
   push:
-    branches: [main, 'port/neoforge-1.21.1']
+    branches: [main, 'port/neoforge-1.21.1', 'fix/neoforge-21.1.264']
   workflow_dispatch:
 
 permissions:

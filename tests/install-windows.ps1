@@ -100,3 +100,14 @@ foreach ($entry in @('install-modpack.bat', 'install-test.bat')) {
     if ($command -notmatch 'install\.ps1"\s+-TestProfile(?:\s|$)') { throw "$entry does not select the test profile" }
 }
 Write-Host 'PASS: default and test batch entry points target .minecraft/versions/test/mods.'
+
+# TLauncher may wrap launch arguments in conditional values or maps.
+$nested = '{"id":"test","mainClass":"cpw.mods.bootstraplauncher.BootstrapLauncher","arguments":{"game":[{"rules":[{"action":"allow"}],"value":["--fml.neoForgeVersion","21.1.264","--fml.mcVersion","1.21.1"]}]}}'
+Set-Content (Join-Path $testProfile 'test.json') $nested
+Run-Installer -TestProfile
+Set-Content (Join-Path $testProfile 'test.json') '{"id":"test","arguments":{"game":{"--fml.neoForgeVersion":"21.1.264","--fml.mcVersion":"1.21.1"}}}'
+Run-Installer -TestProfile
+$encoded = @{ id = 'test'; arguments = ($nested | ConvertFrom-Json).arguments | ConvertTo-Json -Depth 10 -Compress } | ConvertTo-Json -Depth 10
+Set-Content (Join-Path $testProfile 'test.json') $encoded
+Run-Installer -TestProfile
+Write-Host 'PASS: NeoForge 21.1.264 nested, mapped and JSON-encoded launcher arguments.'
