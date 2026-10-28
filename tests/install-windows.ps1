@@ -64,3 +64,12 @@ if ((Get-ChildItem -LiteralPath $original).Count -ne 1) { throw 'Shared mods dir
 if ((Get-Content (Join-Path $original 'claude-sentinel.jar') -Raw).Trim() -ne 'original installation') { throw 'Shared mod was changed' }
 if ((Get-Content (Join-Path $otherProfile 'claude-profile.jar') -Raw).Trim() -ne 'other profile') { throw 'Other profile was changed' }
 Write-Host 'PASS: test profile install/update creates only test/mods, preserving shared mods and other profiles.'
+
+# An inherited loader may be read, but the parent profile must never receive our mods.
+$parentProfile = Join-Path $env:APPDATA '.minecraft\versions\neo-base'
+New-Item -ItemType Directory -Force $parentProfile | Out-Null
+Set-Content (Join-Path $parentProfile 'neo-base.json') '{"libraries":[{"name":"net.neoforged:neoforge:21.1.265"}]}'
+Set-Content (Join-Path $testProfile 'test.json') '{"id":"test","inheritsFrom":"neo-base"}'
+& $installer -TestProfile
+if (Test-Path (Join-Path $parentProfile 'mods')) { throw 'Inherited profile was modified' }
+Write-Host 'PASS: inherited NeoForge profile is detected without modifying the parent.'

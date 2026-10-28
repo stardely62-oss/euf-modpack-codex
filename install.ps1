@@ -86,10 +86,26 @@ try {
     # Confirm a NeoForge 1.21.1 profile before touching any installed mods.
     $profile = Join-Path $versionDir "$VersionName.json"
     if (-not (Test-Path -LiteralPath $profile)) { throw "Missing launcher profile: $profile" }
-    $profileText = Get-Content -LiteralPath $profile -Raw
-    $loaderMatch = [regex]::Match($profileText, 'net\.neoforged:neoforge:(21\.1\.[0-9]+)')
-    if (-not $loaderMatch.Success) { throw 'Choose a NeoForge 1.21.1 profile in the separate game directory.' }
-    if ([version]$loaderMatch.Groups[1].Value -lt [version]'21.1.265') { throw 'NeoForge 21.1.265 or newer for Minecraft 1.21.1 is required.' }
+    # TLauncher may keep NeoForge libraries in the profile's inheritsFrom parent.
+    $loader = $null
+    $seenProfiles = @{}
+    for ($depth = 0; $depth -lt 8; $depth++) {
+        Assert-IsolatedPath $profile
+        if ($seenProfiles.ContainsKey($profile)) { throw 'Cyclic launcher profile inheritance.' }
+        $seenProfiles[$profile] = $true
+        $profileText = Get-Content -LiteralPath $profile -Raw
+        $loaderMatch = [regex]::Match($profileText, 'net\.neoforged:neoforge:([0-9]+\.[0-9]+\.[0-9]+)')
+        if ($loaderMatch.Success) { $loader = [version]$loaderMatch.Groups[1].Value; break }
+        $parent = ($profileText | ConvertFrom-Json).inheritsFrom
+        if (-not $parent) { break }
+        if ($parent -in @('.', '..') -or $parent.IndexOfAny([IO.Path]::GetInvalidFileNameChars()) -ge 0 -or $parent.Contains('/') -or $parent.Contains('\')) {
+            throw 'Invalid inherited profile name.'
+        }
+        $profile = Join-Path (Join-Path $GameDir "versions\$parent") "$parent.json"
+        if (-not (Test-Path -LiteralPath $profile)) { throw "Missing inherited profile: $parent" }
+    }
+    if (-not $loader -or $loader.Major -ne 21 -or $loader.Minor -ne 1) { throw 'Selected profile must use NeoForge for Minecraft 1.21.1.' }
+    if ($loader -lt [version]'21.1.265') { throw 'NeoForge 21.1.265 or newer for Minecraft 1.21.1 is required.' }
     if ((Test-Path -LiteralPath $mods) -and (Get-ChildItem -LiteralPath $mods -Filter 'fabric-api-*.jar')) { throw 'This folder contains Fabric mods. Use a clean NeoForge profile.' }
 
     New-Item -ItemType Directory -Force -Path $mods | Out-Null
