@@ -117,3 +117,8 @@ Run-Installer -TestProfile
 Set-Content (Join-Path $testProfile 'test.json') '{"id":"test","arguments":{"game":[{"value":"21.1.264","name":"--fml.neoForgeVersion"}]}}'
 Run-Installer -TestProfile
 Write-Host 'PASS: typed argument metadata and reversed key/value order do not affect loader detection.'
+
+# Match the evidence from the user's profile even with an unknown argument container.
+Set-Content (Join-Path $testProfile 'test.json') '{"id":"test","mainClass":"cpw.mods.bootstraplauncher.BootstrapLauncher","arguments":{"customContainer":{"loader":"21.1.264","switch":"--fml.neoForgeVersion"}}}'
+Run-Installer -TestProfile
+Write-Host 'PASS: custom argument container with one unambiguous NeoForge version.'

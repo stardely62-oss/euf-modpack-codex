@@ -144,6 +144,15 @@ try {
                 $loader = [version]$Matches[1]
             }
         }
+        # Custom launcher metadata may separate the switch and its value into
+        # nonstandard containers. Only accept an unambiguous NeoForge version.
+        if (-not $loader -and $profileData.arguments) {
+            $argumentJson = $profileData.arguments | ConvertTo-Json -Depth 100 -Compress
+            if ($argumentJson -match '--fml\.neoForgeVersion') {
+                $candidates = @([regex]::Matches($argumentJson, '(?<![\d.])21\.1\.[0-9]+(?![\d.])') | ForEach-Object Value | Sort-Object -Unique)
+                if ($candidates.Count -eq 1) { $loader = [version]$candidates[0] }
+            }
+        }
         if (-not $loader -and $profileData.minecraftArguments -match '(?:^|\s)--fml\.neoForgeVersion[=\s]+([0-9]+\.[0-9]+\.[0-9]+)') {
             $loader = [version]$Matches[1]
         }
