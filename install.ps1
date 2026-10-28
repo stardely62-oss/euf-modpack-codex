@@ -84,6 +84,9 @@ try {
 
     # 3. Моды сборки
     $manifest = Get-Manifest
+    if (-not $manifest -or $manifest.minecraft -ne '1.21.1' -or $manifest.loader -ne 'neoforge' -or -not $manifest.mods) {
+        throw 'Invalid or empty manifest: expected Minecraft 1.21.1 / NeoForge. No mods were updated.'
+    }
     foreach ($mod in $manifest.mods) {
         if ($mod.github) {
             # Наш мод: свежая dev-сборка или последний стабильный релиз из GitHub Releases
