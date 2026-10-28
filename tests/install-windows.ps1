@@ -93,3 +93,10 @@ Set-Content (Join-Path $testProfile 'test.json') '{"id":"test","minecraftArgumen
 Run-Installer -TestProfile
 if ((Get-ChildItem -LiteralPath $original).Count -ne 1 -or (Test-Path (Join-Path $parentProfile 'mods'))) { throw 'Profile isolation was broken' }
 Write-Host 'PASS: official NeoForge launch arguments, inherited official profile and legacy argument string.'
+
+# Both normal double-click entry points must select the agreed test profile.
+foreach ($entry in @('install-modpack.bat', 'install-test.bat')) {
+    $command = Get-Content (Join-Path $PSScriptRoot "..\$entry") -Raw
+    if ($command -notmatch 'install\.ps1"\s+-TestProfile(?:\s|$)') { throw "$entry does not select the test profile" }
+}
+Write-Host 'PASS: default and test batch entry points target .minecraft/versions/test/mods.'

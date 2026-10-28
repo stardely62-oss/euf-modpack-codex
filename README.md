@@ -1,3 +1,5 @@
+> **Обычный `install-modpack.bat` устанавливает моды в `.minecraft\versions\test\mods`.** Общий путь TLauncher менять не нужно.
+
 > **NeoForge 1.21.1, Java 21 — отдельная версия Codex.** Установка в отдельную папку игры: [CODEX.md](CODEX.md).
 
 # Сборка euf
