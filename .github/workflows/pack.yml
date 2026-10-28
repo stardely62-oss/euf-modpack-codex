@@ -34,9 +34,29 @@ jobs:
           $env:APPDATA = Join-Path $env:RUNNER_TEMP 'installer-safety'
           New-Item -ItemType Directory -Force $env:APPDATA | Out-Null
           $rejected = $false
-          try { & ./install.ps1 -GameDir (Join-Path $env:APPDATA '.minecraft') } catch { $rejected = $true }
+          try { & ./install.ps1 -GameDir (Join-Path $env:APPDATA '.minecraft') } catch {
+            if ($_.Exception.Message -notlike 'Use only *') { throw }
+            $rejected = $true
+          }
           if (-not $rejected) { throw 'Original game directory was accepted' }
           if (Test-Path (Join-Path $env:APPDATA '.minecraft')) { throw 'Original directory was touched' }
+          # Run the actual guard with the allowed path, without starting downloads.
+          $prefix = (Get-Content ./install.ps1 -Raw).Split('$ProgressPreference')[0]
+          $guard = [scriptblock]::Create($prefix)
+          $allowed = Join-Path $env:APPDATA '.minecraft-codex'
+          & $guard -GameDir $allowed
+          New-Item -ItemType Directory -Force $allowed | Out-Null
+          $target = Join-Path $env:APPDATA 'original-game'
+          New-Item -ItemType Directory -Force $target | Out-Null
+          New-Item -ItemType SymbolicLink -Path (Join-Path $allowed 'mods') -Target $target | Out-Null
+          # Append a check of the final mods path to the same script scope.
+          $linkedGuard = [scriptblock]::Create($prefix + "`n" + 'Assert-IsolatedPath (Join-Path $GameDir "mods")')
+          $rejected = $false
+          try { & $linkedGuard -GameDir $allowed } catch {
+            if ($_.Exception.Message -notlike 'Linked directories are not allowed:*') { throw }
+            $rejected = $true
+          }
+          if (-not $rejected) { throw 'Linked mods directory was accepted' }
       - name: Build the installer zip
         run: zip -j euf-modpack.zip install-modpack.bat install.ps1 modpack.json README.md CODEX.md
       - name: Publish the release
@@ -44,5 +64,5 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release delete pack -y --cleanup-tag || true
-          gh release create pack euf-modpack.zip --title "Сборка euf" --latest \
+          gh release create pack euf-modpack.zip --title "Сборка euf — Codex (отдельная папка игры)" --latest \
             --notes "Установщик сборки: распакуй и запусти install-modpack.bat. Моды: $(python3 -c "import json; print(', '.join(m['name'] for m in json.load(open('modpack.json'))['mods']))")."
