@@ -2,7 +2,7 @@ name: pack
 
 on:
   push:
-    branches: [main]
+    branches: [main, 'port/neoforge-1.21.1']
   workflow_dispatch:
 
 permissions:
@@ -43,7 +43,7 @@ jobs:
           # Run the actual guard with the allowed path, without starting downloads.
           $prefix = (Get-Content ./install.ps1 -Raw).Split('$ProgressPreference')[0]
           $guard = [scriptblock]::Create($prefix)
-          $allowed = Join-Path $env:APPDATA '.minecraft-codex'
+          $allowed = Join-Path $env:APPDATA '.minecraft-codex-neoforge-1.21.1'
           & $guard -GameDir $allowed
           New-Item -ItemType Directory -Force $allowed | Out-Null
           $target = Join-Path $env:APPDATA 'original-game'
@@ -59,7 +59,12 @@ jobs:
           if (-not $rejected) { throw 'Linked mods directory was accepted' }
       - name: Build the installer zip
         run: zip -j euf-modpack.zip install-modpack.bat install.ps1 modpack.json README.md CODEX.md
+      - uses: actions/upload-artifact@v4
+        with:
+          name: neoforge-installer
+          path: euf-modpack.zip
       - name: Publish the release
+        if: github.ref == 'refs/heads/main'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |

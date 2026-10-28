@@ -1,21 +1,21 @@
-﻿# Ставит или обновляет всю сборку euf (Fabric 1.20.1) в папку mods TLauncher:
-# Fabric API под твой Fabric Loader и все моды из modpack.json. Лишние старые версии этих модов убирает.
+﻿# Ставит или обновляет всю сборку euf (NeoForge 1.21.1) в папку mods TLauncher:
+# Все моды из modpack.json для NeoForge 1.21.1. Лишние старые версии этих модов убирает.
 # Запуск: двойной клик по install-modpack.bat (лежит рядом).
 #   -Stable           брать стабильные релизы наших модов (v*), а не свежие dev-сборки
 #   -VersionName "…"  имя версии в TLauncher (по умолчанию "Fabric 1.20.1")
-#   -GameDir "…"      папка игры (по умолчанию %APPDATA%\.minecraft-codex)
+#   -GameDir "…"      папка игры (по умолчанию %APPDATA%\.minecraft-codex-neoforge-1.21.1)
 param(
     [switch]$Stable,
-    [string]$VersionName = 'Fabric 1.20.1',
-    [string]$GameDir = (Join-Path $env:APPDATA '.minecraft-codex')
+    [string]$VersionName = 'NeoForge 1.21.1',
+    [string]$GameDir = (Join-Path $env:APPDATA '.minecraft-codex-neoforge-1.21.1')
 )
 
 $ErrorActionPreference = 'Stop'
 
 # This installer exclusively owns a separate game directory.
-$isolatedRoot = [IO.Path]::GetFullPath((Join-Path $env:APPDATA '.minecraft-codex')).TrimEnd('\', '/')
+$isolatedRoot = [IO.Path]::GetFullPath((Join-Path $env:APPDATA '.minecraft-codex-neoforge-1.21.1')).TrimEnd('\', '/')
 if ([IO.Path]::GetFullPath($GameDir).TrimEnd('\', '/') -ine $isolatedRoot) {
-    throw 'Use only %APPDATA%\.minecraft-codex. The original Minecraft directory is protected.'
+    throw 'Use only %APPDATA%\.minecraft-codex-neoforge-1.21.1. The original Minecraft directory is protected.'
 }
 function Assert-IsolatedPath([string]$path) {
     $item = [IO.Path]::GetFullPath($path)
@@ -70,42 +70,17 @@ try {
     Say "Папка модов: $mods"
 
     if (Get-Process -Name javaw, java -ErrorAction SilentlyContinue) {
-        Say "Похоже, Minecraft запущен. Закрой игру, иначе старые файлы не удалятся." Yellow
+        throw "Close Minecraft before updating mods."
     }
 
-    # 2. Версия Fabric Loader у этой версии TLauncher -> какой Fabric API подходит
-    $loader = $null
-    $json = Get-ChildItem $versionDir -Filter '*.json' | Select-Object -First 1
-    if ($json) {
-        $m = [regex]::Match((Get-Content $json.FullName -Raw), 'net\.fabricmc:fabric-loader:([0-9][0-9.]*)')
-        if ($m.Success) { $loader = [version]$m.Groups[1].Value }
-    }
-    if (-not $loader) {
-        Say "Не смог определить версию Fabric Loader, беру Fabric API для самого старого загрузчика." Yellow
-        $loader = [version]'0.14.21'
-    }
-    if ($loader -lt [version]'0.14.21') {
-        throw "Fabric Loader $loader слишком старый, нужен 0.14.21 или новее. Выбери в TLauncher версию Fabric поновее."
-    }
-    if ($loader -ge [version]'0.16.10') { $fapi = '0.92.12+1.20.1' }
-    elseif ($loader -ge [version]'0.15.6') { $fapi = '0.92.2+1.20.1' }
-    else { $fapi = '0.91.0+1.20.1' }
-    Say "Fabric Loader $loader -> Fabric API $fapi"
-
-    $fapiName = "fabric-api-$fapi.jar"
-    if (Test-Path (Join-Path $mods $fapiName)) {
-        Say "Fabric API уже стоит."
-    } else {
-        $query = 'game_versions=' + [uri]::EscapeDataString('["1.20.1"]') + '&loaders=' + [uri]::EscapeDataString('["fabric"]')
-        $versions = Invoke-RestMethod "https://api.modrinth.com/v2/project/fabric-api/version?$query" -Headers $Headers
-        $v = $versions | Where-Object { $_.version_number -eq $fapi } | Select-Object -First 1
-        if (-not $v) { throw "Fabric API $fapi не найден на Modrinth." }
-        $file = $v.files | Where-Object { $_.primary } | Select-Object -First 1
-        if (-not $file) { $file = $v.files[0] }
-        Get-ChildItem $mods -Filter 'fabric-api-*.jar' | Remove-Item -Force
-        Invoke-WebRequest $file.url -OutFile (Join-Path $mods $fapiName) -Headers $Headers -UseBasicParsing
-        Say "Fabric API $fapi установлен." Green
-    }
+    # Confirm a NeoForge 1.21.1 profile before touching any installed mods.
+    $profile = Join-Path $versionDir "$VersionName.json"
+    if (-not (Test-Path -LiteralPath $profile)) { throw "Missing launcher profile: $profile" }
+    $profileText = Get-Content -LiteralPath $profile -Raw
+    $loaderMatch = [regex]::Match($profileText, 'net\.neoforged:neoforge:(21\.1\.[0-9]+)')
+    if (-not $loaderMatch.Success) { throw 'Choose a NeoForge 1.21.1 profile in the separate game directory.' }
+    if ([version]$loaderMatch.Groups[1].Value -lt [version]'21.1.265') { throw 'NeoForge 21.1.265 or newer for Minecraft 1.21.1 is required.' }
+    if (Get-ChildItem -LiteralPath $mods -Filter 'fabric-api-*.jar') { throw 'This folder contains Fabric mods. Use a clean NeoForge profile.' }
 
     # 3. Моды сборки
     $manifest = Get-Manifest
