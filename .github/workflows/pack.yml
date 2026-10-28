@@ -14,12 +14,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Check the manifest
-        run: python3 -c "import json; m = json.load(open('modpack.json')); assert m['mods'], 'no mods'; print(len(m['mods']), 'mods')"
+        run: python3 -c "import json; m = json.load(open('modpack-neoforge-1.21.1.json')); assert m['mods'], 'no mods'; print(len(m['mods']), 'mods')"
       - name: Check every Modrinth file against its checksum
         run: |
           python3 - <<'PY'
           import hashlib, json, urllib.request
-          for mod in json.load(open('modpack.json'))['mods']:
+          for mod in json.load(open('modpack-neoforge-1.21.1.json'))['mods']:
               if 'url' in mod:
                   data = urllib.request.urlopen(urllib.request.Request(mod['url'], headers={'User-Agent': 'euf-modpack-ci'})).read()
                   assert hashlib.sha512(data).hexdigest() == mod['sha512'], mod['name'] + ': checksum mismatch'
@@ -58,16 +58,16 @@ jobs:
           }
           if (-not $rejected) { throw 'Linked mods directory was accepted' }
       - name: Build the installer zip
-        run: zip -j euf-modpack.zip install-modpack.bat install.ps1 modpack.json README.md CODEX.md
+        run: zip -j euf-modpack-neoforge-1.21.1.zip install-modpack.bat install.ps1 modpack-neoforge-1.21.1.json README.md CODEX.md
       - uses: actions/upload-artifact@v4
         with:
           name: neoforge-installer
-          path: euf-modpack.zip
+          path: euf-modpack-neoforge-1.21.1.zip
       - name: Publish the release
         if: github.ref == 'refs/heads/main'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release delete pack -y --cleanup-tag || true
-          gh release create pack euf-modpack.zip --title "Сборка euf — Codex (отдельная папка игры)" --latest \
-            --notes "Установщик сборки: распакуй и запусти install-modpack.bat. Моды: $(python3 -c "import json; print(', '.join(m['name'] for m in json.load(open('modpack.json'))['mods']))")."
+          gh release delete pack-neoforge -y --cleanup-tag || true
+          gh release create pack-neoforge euf-modpack-neoforge-1.21.1.zip --title "Сборка euf — Codex (отдельная папка игры)" --latest \
+            --notes "Установщик сборки: распакуй и запусти install-modpack.bat. Моды: $(python3 -c "import json; print(', '.join(m['name'] for m in json.load(open('modpack-neoforge-1.21.1.json'))['mods']))")."

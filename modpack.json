@@ -1,34 +1,26 @@
 {
   "name": "euf-modpack",
-  "minecraft": "1.21.1",
-  "loader": "neoforge",
+  "minecraft": "1.20.1",
+  "loader": "fabric",
   "mods": [
     {
       "name": "Ender Obelisks",
       "github": "stardely62-oss/modhyed-codex",
       "asset": "ender-obelisks-*.jar",
-      "replaces": [
-        "ender-obelisks-*.jar",
-        "modhyed-*.jar"
-      ]
+      "replaces": ["ender-obelisks-*.jar", "modhyed-*.jar"]
     },
     {
       "name": "Mage's Legacy",
       "github": "stardely62-oss/mages-legacy-codex",
       "asset": "mages-legacy-*.jar",
-      "replaces": [
-        "mages-legacy-*.jar"
-      ]
+      "replaces": ["mages-legacy-*.jar"]
     },
     {
       "name": "JourneyMap",
-      "url": "https://cdn.modrinth.com/data/lfHFW1mp/versions/CtFE7hwT/journeymap-neoforge-1.21.1-6.0.9.jar",
-      "file": "journeymap-neoforge-1.21.1-6.0.9.jar",
-      "sha512": "8900ee4cdb7d1ffb6559decdeec84ad479d04b2e7b01a60be9f6e328809af2bfd7a80077b7da0e49bc96261fe8fe274ba33c62f6c9f65302c783ed823c4ff746",
-      "replaces": [
-        "journeymap-*.jar"
-      ]
+      "url": "https://cdn.modrinth.com/data/lfHFW1mp/versions/Dk3AKHGe/journeymap-fabric-1.20.1-6.0.7.jar",
+      "file": "journeymap-fabric-1.20.1-6.0.7.jar",
+      "sha512": "9a6b9bbdf1d0e7532ede179cb47ca07626d9df3a27d3bb4472b77dfa2ef010ccd2bea40a3f47f048ffe095d103a42dd492b1cc43c0f06349c0e67933b866692e",
+      "replaces": ["journeymap-*.jar"]
     }
-  ],
-  "neoforge": "21.1.265"
+  ]
 }

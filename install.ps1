@@ -41,9 +41,9 @@ function Say($text, $color = 'Gray') { Write-Host $text -ForegroundColor $color 
 # Свежий список модов из репозитория сборки; без интернета до GitHub — тот, что лежит рядом
 function Get-Manifest {
     try {
-        return Invoke-RestMethod "https://raw.githubusercontent.com/$PackRepo/main/modpack.json" -Headers $Headers
+        return Invoke-RestMethod "https://raw.githubusercontent.com/$PackRepo/main/modpack-neoforge-1.21.1.json" -Headers $Headers
     } catch {
-        $local = Join-Path $PSScriptRoot 'modpack.json'
+        $local = Join-Path $PSScriptRoot 'modpack-neoforge-1.21.1.json'
         if (Test-Path $local) { return Get-Content $local -Raw -Encoding UTF8 | ConvertFrom-Json }
         throw "Не удалось получить список модов сборки."
     }
@@ -87,7 +87,7 @@ try {
     foreach ($mod in $manifest.mods) {
         if ($mod.github) {
             # Наш мод: свежая dev-сборка или последний стабильный релиз из GitHub Releases
-            $api = if ($Stable) { "https://api.github.com/repos/$($mod.github)/releases/latest" } else { "https://api.github.com/repos/$($mod.github)/releases/tags/dev" }
+            $api = if ($Stable) { "https://api.github.com/repos/$($mod.github)/releases/latest" } else { "https://api.github.com/repos/$($mod.github)/releases/tags/neoforge-dev" }
             $release = Invoke-RestMethod $api -Headers $Headers
             $asset = $release.assets | Where-Object { $_.name -like $mod.asset -and $_.name -notlike '*-sources*' } | Select-Object -First 1
             if (-not $asset) { throw "$($mod.name): в релизе '$($release.name)' нет jar-файла." }
