@@ -3,18 +3,37 @@
 # Запуск: двойной клик по install-modpack.bat (лежит рядом).
 #   -Stable           брать стабильные релизы наших модов (v*), а не свежие dev-сборки
 #   -VersionName "…"  имя версии в TLauncher (по умолчанию "Fabric 1.20.1")
-#   -GameDir "…"      папка игры (по умолчанию %APPDATA%\.minecraft)
+#   -GameDir "…"      папка игры (по умолчанию %APPDATA%\.minecraft-codex)
 param(
     [switch]$Stable,
     [string]$VersionName = 'Fabric 1.20.1',
-    [string]$GameDir = (Join-Path $env:APPDATA '.minecraft')
+    [string]$GameDir = (Join-Path $env:APPDATA '.minecraft-codex')
 )
 
 $ErrorActionPreference = 'Stop'
+
+# This installer exclusively owns a separate game directory.
+$isolatedRoot = [IO.Path]::GetFullPath((Join-Path $env:APPDATA '.minecraft-codex')).TrimEnd('\', '/')
+if ([IO.Path]::GetFullPath($GameDir).TrimEnd('\', '/') -ine $isolatedRoot) {
+    throw 'Use only %APPDATA%\.minecraft-codex. The original Minecraft directory is protected.'
+}
+function Assert-IsolatedPath([string]$path) {
+    $item = [IO.Path]::GetFullPath($path)
+    while ($item) {
+        if ((Test-Path -LiteralPath $item) -and ((Get-Item -LiteralPath $item -Force).Attributes -band [IO.FileAttributes]::ReparsePoint)) {
+            throw "Linked directories are not allowed: $item"
+        }
+        $parent = Split-Path -Parent $item
+        if ($parent -eq $item) { break }
+        $item = $parent
+    }
+}
+Assert-IsolatedPath $GameDir
+
 $ProgressPreference = 'SilentlyContinue'
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
-$PackRepo = 'stardely62-oss/euf-modpack'
+$PackRepo = 'stardely62-oss/euf-modpack-codex'
 $Headers = @{ 'User-Agent' = 'euf-modpack-installer' }
 
 function Say($text, $color = 'Gray') { Write-Host $text -ForegroundColor $color }
@@ -46,6 +65,7 @@ try {
     }
     $mods = Join-Path $versionDir 'mods'
     if (-not (Test-Path $mods)) { $mods = Join-Path $GameDir 'mods' }
+    Assert-IsolatedPath $mods
     New-Item -ItemType Directory -Force -Path $mods | Out-Null
     Say "Папка модов: $mods"
 

@@ -1,3 +1,5 @@
+> **Отдельная версия Codex.** Установка в отдельную папку игры: [CODEX.md](CODEX.md).
+
 # Сборка euf
 
 Сборка модов для **Minecraft 1.20.1 (Fabric)**: наши моды и всё, что с ними играется вместе. Ставится и обновляется одним файлом в TLauncher, лицензия Minecraft не нужна.
@@ -6,8 +8,8 @@
 
 | Мод | Что делает | Откуда |
 |---|---|---|
-| [Ender Obelisks](https://github.com/stardely62-oss/modhyed) | обелиски для телепортации между точками мира, ярусы дальности, руины | наш, GitHub Releases |
-| [Mage's Legacy](https://github.com/stardely62-oss/mages-legacy) | расы с деревом талантов: Мицелиды, Пастыри, Застывшие, Кровники, Пустотники, Наёмники, Искусители, Личины | наш, GitHub Releases |
+| [Ender Obelisks](https://github.com/stardely62-oss/modhyed-codex) | обелиски для телепортации между точками мира, ярусы дальности, руины | наш, GitHub Releases |
+| [Mage's Legacy](https://github.com/stardely62-oss/mages-legacy-codex) | расы с деревом талантов: Мицелиды, Пастыри, Застывшие, Кровники, Пустотники, Наёмники, Искусители, Личины | наш, GitHub Releases |
 | [JourneyMap](https://modrinth.com/mod/journeymap) | миникарта и полноэкранная карта, обелиски видны на ней | Modrinth, версия 6.0.7 |
 | [Fabric API](https://modrinth.com/mod/fabric-api) | библиотека, нужна всем модам | Modrinth, под твой Fabric Loader |
 
@@ -16,7 +18,7 @@
 ## Установка (TLauncher)
 
 1. В TLauncher выбери **Fabric 1.20.1** и запусти один раз до главного меню.
-2. Скачай [`euf-modpack.zip`](https://github.com/stardely62-oss/euf-modpack/releases/latest/download/euf-modpack.zip), распакуй куда угодно и запусти `install-modpack.bat`.
+2. Скачай [`euf-modpack.zip`](https://github.com/stardely62-oss/euf-modpack-codex/releases/latest/download/euf-modpack.zip), распакуй куда угодно и запусти `install-modpack.bat`.
 3. Запускай в TLauncher версию **Fabric 1.20.1**.
 
 Для обновления запусти `install-modpack.bat` ещё раз: он докачает новые версии и уберёт старые.

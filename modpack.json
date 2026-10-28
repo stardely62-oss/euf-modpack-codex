@@ -5,13 +5,13 @@
   "mods": [
     {
       "name": "Ender Obelisks",
-      "github": "stardely62-oss/modhyed",
+      "github": "stardely62-oss/modhyed-codex",
       "asset": "ender-obelisks-*.jar",
       "replaces": ["ender-obelisks-*.jar", "modhyed-*.jar"]
     },
     {
       "name": "Mage's Legacy",
-      "github": "stardely62-oss/mages-legacy",
+      "github": "stardely62-oss/mages-legacy-codex",
       "asset": "mages-legacy-*.jar",
       "replaces": ["mages-legacy-*.jar"]
     },

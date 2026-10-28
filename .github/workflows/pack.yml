@@ -25,8 +25,20 @@ jobs:
                   assert hashlib.sha512(data).hexdigest() == mod['sha512'], mod['name'] + ': checksum mismatch'
                   print(mod['name'], 'ok')
           PY
+      - name: Validate PowerShell and directory protection
+        shell: pwsh
+        run: |
+          $errors = $null
+          [System.Management.Automation.Language.Parser]::ParseFile("$PWD/install.ps1", [ref]$null, [ref]$errors) | Out-Null
+          if ($errors.Count) { throw ($errors | Out-String) }
+          $env:APPDATA = Join-Path $env:RUNNER_TEMP 'installer-safety'
+          New-Item -ItemType Directory -Force $env:APPDATA | Out-Null
+          $rejected = $false
+          try { & ./install.ps1 -GameDir (Join-Path $env:APPDATA '.minecraft') } catch { $rejected = $true }
+          if (-not $rejected) { throw 'Original game directory was accepted' }
+          if (Test-Path (Join-Path $env:APPDATA '.minecraft')) { throw 'Original directory was touched' }
       - name: Build the installer zip
-        run: zip -j euf-modpack.zip install-modpack.bat install.ps1 modpack.json README.md
+        run: zip -j euf-modpack.zip install-modpack.bat install.ps1 modpack.json README.md CODEX.md
       - name: Publish the release
         env:
           GH_TOKEN: ${{ github.token }}
