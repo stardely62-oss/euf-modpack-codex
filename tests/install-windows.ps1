@@ -73,3 +73,17 @@ Set-Content (Join-Path $testProfile 'test.json') '{"id":"test","inheritsFrom":"n
 & $installer -TestProfile
 if (Test-Path (Join-Path $parentProfile 'mods')) { throw 'Inherited profile was modified' }
 Write-Host 'PASS: inherited NeoForge profile is detected without modifying the parent.'
+
+# Regression: the real official NeoForge installer profile has no neoforge library.
+$official = Join-Path $PSScriptRoot 'fixtures\neoforge-21.1.265-version.json'
+Copy-Item $official (Join-Path $testProfile 'test.json') -Force
+& $installer -TestProfile
+# Also resolve the actual profile through a TLauncher wrapper.
+Copy-Item $official (Join-Path $parentProfile 'neo-base.json') -Force
+Set-Content (Join-Path $testProfile 'test.json') '{"id":"test","inheritsFrom":"neo-base"}'
+& $installer -TestProfile
+# Legacy string arguments remain supported.
+Set-Content (Join-Path $testProfile 'test.json') '{"id":"test","minecraftArguments":"--fml.neoForgeVersion 21.1.265 --fml.mcVersion 1.21.1"}'
+& $installer -TestProfile
+if ((Get-ChildItem -LiteralPath $original).Count -ne 1 -or (Test-Path (Join-Path $parentProfile 'mods'))) { throw 'Profile isolation was broken' }
+Write-Host 'PASS: official NeoForge launch arguments, inherited official profile and legacy argument string.'

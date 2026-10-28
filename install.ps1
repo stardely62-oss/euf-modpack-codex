@@ -94,9 +94,29 @@ try {
         if ($seenProfiles.ContainsKey($profile)) { throw 'Cyclic launcher profile inheritance.' }
         $seenProfiles[$profile] = $true
         $profileText = Get-Content -LiteralPath $profile -Raw
-        $loaderMatch = [regex]::Match($profileText, 'net\.neoforged:neoforge:([0-9]+\.[0-9]+\.[0-9]+)')
-        if ($loaderMatch.Success) { $loader = [version]$loaderMatch.Groups[1].Value; break }
-        $parent = ($profileText | ConvertFrom-Json).inheritsFrom
+        $profileData = $profileText | ConvertFrom-Json
+        # Official NeoForge profiles carry the loader version as a launch argument,
+        # not necessarily as a net.neoforged:neoforge library.
+        $gameArguments = @($profileData.arguments.game)
+        for ($i = 0; $i -lt $gameArguments.Count; $i++) {
+            $argument = $gameArguments[$i]
+            if ($argument -isnot [string]) { continue }
+            if ($argument -eq '--fml.neoForgeVersion' -and $i + 1 -lt $gameArguments.Count) {
+                $value = [string]$gameArguments[$i + 1]
+                if ($value -match '^([0-9]+\.[0-9]+\.[0-9]+)(?:-.*)?$') { $loader = [version]$Matches[1] }
+            } elseif ($argument -match '^--fml\.neoForgeVersion[=\s]+([0-9]+\.[0-9]+\.[0-9]+)(?:-.*)?$') {
+                $loader = [version]$Matches[1]
+            }
+        }
+        if (-not $loader -and $profileData.minecraftArguments -match '(?:^|\s)--fml\.neoForgeVersion[=\s]+([0-9]+\.[0-9]+\.[0-9]+)') {
+            $loader = [version]$Matches[1]
+        }
+        if (-not $loader) {
+            $loaderMatch = [regex]::Match(($profileData.libraries | ConvertTo-Json -Depth 20 -Compress), 'net\.neoforged:neoforge:([0-9]+\.[0-9]+\.[0-9]+)')
+            if ($loaderMatch.Success) { $loader = [version]$loaderMatch.Groups[1].Value }
+        }
+        if ($loader) { break }
+        $parent = $profileData.inheritsFrom
         if (-not $parent) { break }
         if ($parent -in @('.', '..') -or $parent.IndexOfAny([IO.Path]::GetInvalidFileNameChars()) -ge 0 -or $parent.Contains('/') -or $parent.Contains('\')) {
             throw 'Invalid inherited profile name.'
@@ -104,8 +124,9 @@ try {
         $profile = Join-Path (Join-Path $GameDir "versions\$parent") "$parent.json"
         if (-not (Test-Path -LiteralPath $profile)) { throw "Missing inherited profile: $parent" }
     }
-    if (-not $loader -or $loader.Major -ne 21 -or $loader.Minor -ne 1) { throw 'Selected profile must use NeoForge for Minecraft 1.21.1.' }
-    if ($loader -lt [version]'21.1.265') { throw 'NeoForge 21.1.265 or newer for Minecraft 1.21.1 is required.' }
+    if (-not $loader -or $loader.Major -ne 21 -or $loader.Minor -ne 1) { throw 'NeoForge for Minecraft 1.21.1 was not found in the selected profile or its parent profiles.' }
+    if ($loader -lt [version]'21.1.265') { throw "Detected NeoForge $loader. These mods require NeoForge 21.1.265 or newer for Minecraft 1.21.1. Update the loader for profile '$VersionName'." }
+    Say "NeoForge $loader"
     if ((Test-Path -LiteralPath $mods) -and (Get-ChildItem -LiteralPath $mods -Filter 'fabric-api-*.jar')) { throw 'This folder contains Fabric mods. Use a clean NeoForge profile.' }
 
     New-Item -ItemType Directory -Force -Path $mods | Out-Null
