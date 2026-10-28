@@ -112,7 +112,7 @@ try {
             $loader = [version]$Matches[1]
         }
         if (-not $loader) {
-            $loaderMatch = [regex]::Match(($profileData.libraries | ConvertTo-Json -Depth 20 -Compress), 'net\.neoforged:neoforge:([0-9]+\.[0-9]+\.[0-9]+)')
+            $loaderMatch = [regex]::Match([string]($profileData.libraries | ConvertTo-Json -Depth 20 -Compress), 'net\.neoforged:neoforge:([0-9]+\.[0-9]+\.[0-9]+)')
             if ($loaderMatch.Success) { $loader = [version]$loaderMatch.Groups[1].Value }
         }
         if ($loader) { break }
