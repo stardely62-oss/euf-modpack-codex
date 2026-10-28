@@ -111,7 +111,7 @@ try {
         if (-not $loader -and $profileData.minecraftArguments -match '(?:^|\s)--fml\.neoForgeVersion[=\s]+([0-9]+\.[0-9]+\.[0-9]+)') {
             $loader = [version]$Matches[1]
         }
-        if (-not $loader) {
+        if (-not $loader -and $profileData.libraries) {
             $loaderMatch = [regex]::Match([string]($profileData.libraries | ConvertTo-Json -Depth 20 -Compress), 'net\.neoforged:neoforge:([0-9]+\.[0-9]+\.[0-9]+)')
             if ($loaderMatch.Success) { $loader = [version]$loaderMatch.Groups[1].Value }
         }
